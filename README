@@ -1,0 +1,5 @@
+Explore Mandelbrot set fractal in realtime using mouse or joystick.
+
+This will only work in linux(although the shader code will work in other OS)
+
+This uses a lot of libraries, make sure you have them.

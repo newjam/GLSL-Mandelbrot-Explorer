@@ -1,0 +1,10 @@
+# depslib dependency file v1.0
+1254708013 source:/home/james/glfwProjectC/main.c
+	<stdio.h>
+	<stdlib.h>
+	<GL/glfw.h>
+	<FTGL/ftgl.h>
+	<math.h>
+	<sys/time.h>
+	<pnglite.h>
+
