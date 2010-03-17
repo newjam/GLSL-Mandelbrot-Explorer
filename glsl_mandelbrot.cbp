@@ -39,6 +39,7 @@
 		<Unit filename="main.c">
 			<Option compilerVar="CC" />
 		</Unit>
+		<Unit filename="mandelbrot (copy).frag" />
 		<Unit filename="mandelbrot.frag" />
 		<Extensions>
 			<envvars />

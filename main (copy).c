@@ -3,8 +3,7 @@
 
 //#include <GL/gl3.h>
 //#include <GL/glext.h>
-//-lGL -lglfw -lXrandr -lpthread -lz -lpnglite -lftgl
-//-lGL -lglfw -lXrandr -lpthread -lz -lpnglite -lftgl
+
 // glfw should include everything I need for ogl.
 #include <GL/glfw.h>
 // ftgl is used for rendering text.
@@ -26,8 +25,6 @@
 
 //static const int window_width = 1440;
 //static const int window_height = 900;
-
-const float pi = 3.1415926;
 
 int window_width;
 int window_height;
@@ -65,10 +62,6 @@ GLhandleARB SetupFragmentShader(char *filename)
     // load shader from file
     FILE *pFile;
     pFile = fopen( filename, "r" );
-
-    if(pFile==0){
-        printf("Error opening shader file for reading.");
-    }
 
     fseek(pFile, 0L, SEEK_END);  /* Position to end of file */
     long lSize = ftell(pFile);     /* Get file length */
@@ -156,18 +149,13 @@ void saveFrameBuffer()
     printf("Saved frame buffer.\n");
 }
 
-GLint minxLoc, minyLoc, deltaxLoc, deltayLoc, iterationsLoc, timeLoc, wWLoc, wHLoc, imagcLoc, realcLoc, thetaLoc;
+GLint minxLoc, minyLoc, deltaxLoc, deltayLoc, iterationsLoc, timeLoc, wWLoc, wHLoc;
 
 GLfloat minx = -2.0f;
 GLfloat miny = -1.0f;
 GLfloat deltax = 3.0f;
 GLfloat deltay = 2.0f;
 GLint iterations = 500;
-
-GLfloat theta = 0.0;
-
-GLfloat imagc = .4;
-GLfloat realc = -.6;
 
 void prepareUniforms(GLhandleARB program)
 {
@@ -177,15 +165,9 @@ void prepareUniforms(GLhandleARB program)
     deltayLoc = glGetUniformLocation(program, "deltay");
     iterationsLoc = glGetUniformLocation(program, "iterations");
 
-
-    thetaLoc =  glGetUniformLocation(program, "theta");
-    //for changing values in the julia set:
-    imagcLoc = glGetUniformLocation(program, "imagc");
-    realcLoc = glGetUniformLocation(program, "realc");
-
     timeLoc = glGetUniformLocation(program, "time");
 
-    //get locations for setting the window width and height in the shader, should resame throughout program exe.
+    //get locations for setting the window width and height in the shader, should remain same throughout program exe.
     wWLoc = glGetUniformLocation(program, "wW");
     wHLoc = glGetUniformLocation(program, "wH");
 }
@@ -196,10 +178,7 @@ void synchVariableUniforms()
     glUniform1f(minyLoc, miny );
     glUniform1f(deltayLoc, deltay );
     glUniform1f(deltaxLoc, deltax );
-    glUniform1f(imagcLoc, imagc );
-    glUniform1f(realcLoc, realc );
     glUniform1i(iterationsLoc, iterations);
-    glUniform1f(thetaLoc, theta);
 }
 
 void zoomIn(GLfloat amount)
@@ -213,24 +192,6 @@ void zoomIn(GLfloat amount)
     deltay -= 2*deltay*amount;
 }
 
-void pan(GLfloat dx, GLfloat dy)
-{
-    minx -= dx*cos(pi * theta) - dy*sin(pi *  theta );
-    miny -= dx*sin(pi * theta) + dy*cos(pi *  theta );
-}
-
-void rotate(GLfloat dr)
-{
-    theta += dr;
-    if ( theta > 1.0 )
-    {
-        theta -= 2.0;
-    }else if (theta < -1.0)
-    {
-        theta += 2.0;
-    }
-}
-
 void printInstructions()
 {
     printf("Use mouse to pan image, use mouse wheel to zoom in/out. Alternatively, use up and down arrow to zoom in/out.\n");
@@ -240,14 +201,8 @@ void printInstructions()
     printf("Press 'f' to toggle printing the frames per second and iterations.\n");
 }
 
-int main(int argc, char *argv[])
+int main(int argc, char **argv)
 {
-    char *shader = "mandelbrot (copy).frag";
-    if (argc > 1)
-    {
-        shader = argv[1];
-    }
-
     glfwInit();
 
     //save off time to be the unique basename for the filename for this session
@@ -278,7 +233,7 @@ int main(int argc, char *argv[])
     glClearColor(0.0, 1.0, 1.0, 0.0);
 
     // will create and set shader program.
-    GLhandleARB program = SetupFragmentShader(shader);
+    GLhandleARB program = SetupFragmentShader("mandelbrot.frag");
     // get the location of all the uniforms
     prepareUniforms(program);
     // must call use program before setting uniforms values
@@ -339,7 +294,7 @@ int main(int argc, char *argv[])
         frame_start = temp_time;
 
         // process input
-        if(glfwGetKey('E') == GLFW_PRESS)
+        if(glfwGetKey('D') == GLFW_PRESS)
         {
             printf("minx: %.31f\n", minx);
             printf("miny: %.31f\n", miny);
@@ -362,7 +317,7 @@ int main(int argc, char *argv[])
             //printf("fps display toggled to: %d\n", show_fps);
         }
 
-        else if(glfwGetKey(GLFW_KEY_RIGHT) == GLFW_PRESS)
+        if(glfwGetKey(GLFW_KEY_RIGHT) == GLFW_PRESS)
         {
             fIterations += 5*(60*frame_time);
             iterations = floor(fIterations);
@@ -387,26 +342,6 @@ int main(int argc, char *argv[])
             need_view_synch = true;
         }
 
-        //changing the julia set constant
-        if(glfwGetKey('W') == GLFW_PRESS)
-        {
-            realc += .0025*frame_time*60.0;
-            need_view_synch = true;
-        }else if(glfwGetKey('S') == GLFW_PRESS)
-        {
-            realc -= .0025*frame_time*60.0;
-            need_view_synch = true;
-        }
-        if(glfwGetKey('A') == GLFW_PRESS)
-        {
-            imagc += .0025*frame_time*60.0;
-            need_view_synch = true;
-        }else if(glfwGetKey('D') == GLFW_PRESS)
-        {
-            imagc -= .0025*frame_time*60.0;
-            need_view_synch = true;
-        }
-
         // changing the area visible (panning left and right)
         glfwGetMousePos(&curMouseX, &curMouseY);
         int mouseDeltax = curMouseX - mouseX;
@@ -418,58 +353,42 @@ int main(int argc, char *argv[])
             mouseX=curMouseX;
             mouseY=curMouseY;
             //printf("new mouse coordinates: (%d, %d)\n", x, y);
-            pan(zoom_factor*deltax*mouseDeltax/20.0, -1*zoom_factor*deltay*mouseDeltay/20.0);
+            minx += zoom_factor*deltax*mouseDeltax/20.0;
+            miny -= zoom_factor*deltay*mouseDeltay/20.0;
             need_view_synch = true;
         }
         if(joystickPresent)
         {
-            float pos[4];
-            glfwGetJoystickPos(GLFW_JOYSTICK_1, pos, 4);
+            float pos[3];
+            glfwGetJoystickPos(GLFW_JOYSTICK_1, pos, 3);
             //the above function gives us bad results for my particular joystick :(, must fiddle around with numbers to get correct answer.
             float xJoyPos = pos[0];//(pos[0]*32767)/128.0 - 1.0;
             float yJoyPos = pos[1];//(pos[1]*32767)/128.0 + 1.0;
             float zJoyPos = -1*pos[2];//-1*((pos[2]*32767)/128.0 - 1.0);
-            float rJoyPos = pos[3];
-            float temp = 0.0;
+
             //printf("%f\n", xJoyPos);
 
             if(xJoyPos>.02||xJoyPos<-.02)
             {
-                temp = zoom_factor*xJoyPos*deltax*1.0*frame_time*60.0;
-                pan(temp, 0);
+                minx += zoom_factor*xJoyPos*deltax*1.0*frame_time*60.0;
                 need_view_synch = true;
             }
             if(yJoyPos>.02||yJoyPos<-.02)
             {
-                temp = zoom_factor*yJoyPos*deltay*1.0*frame_time*60.0;
-                pan(0, temp);
+                miny += zoom_factor*yJoyPos*deltay*1.0*frame_time*60.0;
                 need_view_synch = true;
             }
             if(zJoyPos>.04||zJoyPos<-.04)
             {
-                zoomIn(zJoyPos*scroll_zoom_factor*(frame_time*10.0));
+                zoomIn(zJoyPos*scroll_zoom_factor*(frame_time*60.0));
                 need_view_synch = true;
             }
-            if(rJoyPos>.02 || rJoyPos<-.02)
-            {
-                rotate( rJoyPos/5.0*frame_time );
-                need_view_synch = true;
-            }
-            unsigned char buttons[5];
+            unsigned char buttons[1];
 
-            glfwGetJoystickButtons(GLFW_JOYSTICK_1, buttons, 4);
+            glfwGetJoystickButtons(GLFW_JOYSTICK_1, buttons, 1);
             if(buttons[0]==GLFW_PRESS)
             {
                 saveFrameBuffer();
-            }
-            if(buttons[1]==GLFW_PRESS)
-            {
-                rotate( 0.35*frame_time );
-                need_view_synch = true;
-            }else if(buttons[2]==GLFW_PRESS)
-            {
-                rotate( -0.35*frame_time );
-                need_view_synch = true;
             }
 
             //printf("x:%f, y:%f\n", xJoyPos, yJoyPos);
@@ -496,7 +415,7 @@ int main(int argc, char *argv[])
         glUniform1f(timeLoc, frame_start);
 
         // write fps and iterations to a string.
-        sprintf(text, "FPS: %4.1d; ITER: %d; ZOOMX: %-10.1f", (int)(floor(1.0/frame_time)), iterations, (3.0/deltax));
+        sprintf(text, "FPS: %4.1d; ITER: %d; ZOOM: %-10.1f", (int)(floor(1.0/frame_time)), iterations, (3.0/deltax));
 
         //sprintf("fps %f\n", 1.0/frame_time);
 

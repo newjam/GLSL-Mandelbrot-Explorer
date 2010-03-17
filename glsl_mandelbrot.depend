@@ -8,3 +8,12 @@
 	<sys/time.h>
 	<pnglite.h>
 
+1267870266 source:/home/james/GLSL-Mandelbrot-Explorer/main.c
+	<stdio.h>
+	<stdlib.h>
+	<GL/glfw.h>
+	<FTGL/ftgl.h>
+	<math.h>
+	<sys/time.h>
+	<pnglite.h>
+

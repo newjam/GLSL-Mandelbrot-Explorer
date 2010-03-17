@@ -11,7 +11,7 @@ uniform int wH;
 
 uniform float time;
 
-//const float PI=3.1415926535;
+const float PI=3.1415926535;
 
 vec4 hsv2rgb(vec3 col)
 {
@@ -87,8 +87,8 @@ void main(void)
             {
                 //value = float(n)/float(iterations);
                 //value = (float(n) + (log(2.0*log(2.0)-log(log(sqrt(real*real+imag*imag))))/log(2.0)))/float(iterations);
-                value = float(n);
-
+                value = (float(n) + (0.32663426-log(log(sqrt(real*real+imag*imag))))/0.693147181)/float(iterations);
+                //
                 v = .88;
                 vals[i] = value;
                 break;
@@ -102,14 +102,9 @@ void main(void)
         sum += vals[i];
     }
 
-    float average = sum/4.0;
-    value = (float(average) + (0.32663426-log(log(sqrt(real*real+imag*imag))))/0.693147181)/float(iterations);
-
+    value = sum/4.0;
 
     h = cycle(value-time/15.0);
-
-    //v = .88;//sin(value*3);
-    //pow(value, .25);
 
     gl_FragColor = hsv2rgb(vec3(h, s, v));//vec4(1.0, g, b, 1.0);
 }
