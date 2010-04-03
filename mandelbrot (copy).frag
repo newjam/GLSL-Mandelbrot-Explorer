@@ -13,8 +13,8 @@ uniform int iterations;
 
 
 //for constants in j-set
-uniform float realc;
-uniform float imagc;
+uniform float realc = 0.0;
+uniform float imagc = 0.0;
 
 //to determine the current location
 uniform int wW;
@@ -125,17 +125,21 @@ vec2 mandelbrot(vec2 coord, vec2 constant)
     int n = 0;
 
     float value = 0.0;
+    float value2 = 0.0;
+
+
     while(++n<iterations)
     {
         coord = function(coord, constant);
-        if( coord.x*coord.x + coord.y*coord.y >4.0)
+        if( coord.x*coord.x + coord.y*coord.y > 4.0 )
         {
             //float(n)/float(iterations);
             value = (float(n) + (0.32663426-log(log(sqrt(coord.x * coord.x + coord.y * coord.y))))/0.693147181)/float(iterations);
-            return vec2(value, 0.9);
+            //value2 = (float(n) + (0.32663426-log(log(sqrt(coord.x * coord.x + coord.y * coord.y))))/0.693147181)/float(iterations);
+            return vec2(value, .90);
         }
     }
-    return vec2(0.0, .2);
+    return vec2(0.0, 0.0);
 }
 
 

@@ -24,6 +24,12 @@
 #define true 0xFFFFFFFF
 #define false 0
 
+#define INT 0
+#define FLOAT 1
+
+#define NPARAMS 7
+//11
+
 //static const int window_width = 1440;
 //static const int window_height = 900;
 
@@ -169,8 +175,64 @@ GLfloat theta = 0.0;
 GLfloat imagc = .4;
 GLfloat realc = -.6;
 
+
+
+
+typedef struct {
+    char *name;
+    GLint loc;
+    int utype;
+    union u_tag {
+        GLint ival;
+        GLfloat fval;
+    } val;
+    union mntag {
+        GLint ival;
+        GLfloat fval;
+    } min;
+    union mxtag {
+        GLint ival;
+        GLfloat fval;
+    } max;
+    bool needs_update;
+
+} Parameter;
+
+typedef struct {
+    Parameter *minx;
+    Parameter *miny;
+    Parameter *deltax;
+    Parameter *theta;
+} Viewport;
+
+
+Parameter createGenericParameter (GLhandleARB program, char* name, uint type)
+{
+    Parameter temp;
+    temp.name = name;
+    temp.utype = type;
+    temp.loc = glGetUniformLocation(program, temp.name);
+    temp.needs_update = true;
+    return temp;
+}
+
+Parameter createParameter1i ( GLhandleARB program, char* name, GLint init_val ){
+    Parameter temp = createGenericParameter(program, name, INT );
+    temp.val.ival = init_val;
+    return temp;
+}
+Parameter createParameter1f ( GLhandleARB program, char* name, GLfloat init_val ){
+    Parameter temp = createGenericParameter(program, name, FLOAT );
+    temp.val.fval = init_val;
+    return temp;
+}
+
+Parameter parameters[NPARAMS];
+
 void prepareUniforms(GLhandleARB program)
 {
+
+
     minxLoc = glGetUniformLocation(program, "minx");
     minyLoc = glGetUniformLocation(program, "miny");
     deltaxLoc = glGetUniformLocation(program, "deltax");
@@ -186,8 +248,8 @@ void prepareUniforms(GLhandleARB program)
     timeLoc = glGetUniformLocation(program, "time");
 
     //get locations for setting the window width and height in the shader, should resame throughout program exe.
-    wWLoc = glGetUniformLocation(program, "wW");
-    wHLoc = glGetUniformLocation(program, "wH");
+    //wWLoc = glGetUniformLocation(program, "wW");
+    //wHLoc = glGetUniformLocation(program, "wH");
 }
 
 void synchVariableUniforms()
@@ -201,6 +263,36 @@ void synchVariableUniforms()
     glUniform1i(iterationsLoc, iterations);
     glUniform1f(thetaLoc, theta);
 }
+
+
+bool synchParameters (Parameter *params)
+{
+    bool success = true;
+    int param_i;
+    for ( param_i = 0; param_i < sizeof params; param_i++ )
+    {
+        Parameter *param = &parameters[param_i];
+        if ( param->needs_update )
+        {
+            switch ( param->utype )
+            {
+                case INT:
+                    glUniform1i(param->loc, param->val.ival);
+                    break;
+                case FLOAT:
+                    glUniform1f(param->loc, param->val.fval);
+                    break;
+                default:
+                    success &= false;
+                    break;
+            }
+            param->needs_update = false;
+        }
+    }
+    return success;
+}
+
+
 
 void zoomIn(GLfloat amount)
 {
@@ -231,6 +323,20 @@ void rotate(GLfloat dr)
     }
 }
 
+Viewport* pan2( Viewport *viewport, GLfloat dx, GLfloat dy )
+{
+    GLfloat theta = viewport->theta->val.fval;
+    viewport->minx->val.fval -= dx*cos(pi * theta) - dy*sin(pi *  theta );
+    viewport->miny->val.fval -= dx*sin(pi * theta) + dy*cos(pi *  theta );
+    viewport->minx->needs_update = true;
+    viewport->miny->needs_update = true;
+    return viewport;
+}
+/*void rotate2( Viewport *viewport )
+{
+
+}*/
+
 void printInstructions()
 {
     printf("Use mouse to pan image, use mouse wheel to zoom in/out. Alternatively, use up and down arrow to zoom in/out.\n");
@@ -239,6 +345,14 @@ void printInstructions()
     printf("Press 'd' to print view settings.\n");
     printf("Press 'f' to toggle printing the frames per second and iterations.\n");
 }
+
+# define WIDTH 0
+# define HEIGHT 1
+# define TIME 2
+# define MINX 3
+# define MINY 4
+# define DELTA 5
+# define THETA 6
 
 int main(int argc, char *argv[])
 {
@@ -250,10 +364,7 @@ int main(int argc, char *argv[])
 
     glfwInit();
 
-    //save off time to be the unique basename for the filename for this session
-    struct timeval tim;
-    gettimeofday(&tim, NULL);
-    baseNum = tim.tv_usec;
+
 
     /*int major, minor, rev;
     glfwGetGLVersion(&major, &minor, &rev);
@@ -277,6 +388,7 @@ int main(int argc, char *argv[])
     glTranslatef(0.0, 0.0, -1.00);
     glClearColor(0.0, 1.0, 1.0, 0.0);
 
+
     // will create and set shader program.
     GLhandleARB program = SetupFragmentShader(shader);
     // get the location of all the uniforms
@@ -284,9 +396,35 @@ int main(int argc, char *argv[])
     // must call use program before setting uniforms values
     glUseProgram(program);
 
+    uint param_i = 0;
+    parameters[WIDTH]   = createParameter1i(program, "wW", window_width );
+    parameters[HEIGHT]  = createParameter1i(program, "wH", window_height );
+    parameters[TIME]    = createParameter1f(program, "time", 0.0 );
+    parameters[MINX]    = createParameter1f(program, "minx", -2.0);
+    parameters[MINY]    = createParameter1f(program, "miny", 1.0);
+    parameters[DELTA]   = createParameter1f(program, "deltax", 3.0);
+    parameters[THETA]   = createParameter1f(program, "theta", 1.0);
+    //synchParameters ( parameters );
+
+    /*for ( param_i = 0; param_i < NPARAMS; param_i++ )
+    {
+        Parameter *param = &parameters[param_i];
+        switch ( param->utype )
+        {
+            case INT:
+                glUniform1i(param->loc, param->u.ival);
+                break;
+            case FLOAT:
+                glUniform1f(param->loc, param->u.fval);
+                break;
+            default:
+                break;
+        }
+    }*/
+
     // set the dimension, must be after program is used.
-    glUniform1i(wWLoc, window_width );
-    glUniform1i(wHLoc, window_height );
+    //glUniform1i(wWLoc, window_width );
+    //glUniform1i(wHLoc, window_height );
 
     printInstructions();
 
@@ -296,6 +434,7 @@ int main(int argc, char *argv[])
 
     //bool need_draw = true;
     bool need_view_synch = true;
+
 
     int mouseWheel = 0;
     int mouseWheelDelta = 0;
@@ -493,7 +632,13 @@ int main(int argc, char *argv[])
         }
 
         // update the time inside the shader for cool animations.
-        glUniform1f(timeLoc, frame_start);
+
+        parameters[2].val.fval = frame_start;
+        parameters[2].needs_update = true;
+
+        synchParameters ( parameters );
+
+        //glUniform1f(timeLoc, frame_start);
 
         // write fps and iterations to a string.
         sprintf(text, "FPS: %4.1d; ITER: %d; ZOOMX: %-10.1f", (int)(floor(1.0/frame_time)), iterations, (3.0/deltax));

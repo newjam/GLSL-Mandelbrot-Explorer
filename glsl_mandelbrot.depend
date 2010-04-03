@@ -8,7 +8,7 @@
 	<sys/time.h>
 	<pnglite.h>
 
-1267870266 source:/home/james/GLSL-Mandelbrot-Explorer/main.c
+1268862960 source:/home/james/GLSL-Mandelbrot-Explorer/main.c
 	<stdio.h>
 	<stdlib.h>
 	<GL/glfw.h>
@@ -16,4 +16,45 @@
 	<math.h>
 	<sys/time.h>
 	<pnglite.h>
+
+1270302750 source:/home/james/GLSL-Mandelbrot-Explorer/main2.cpp
+	"shader_interface.h"
+	"utils.h"
+	<iostream>
+	<string>
+	<fstream>
+	<cmath>
+
+1270302887 source:/home/james/GLSL-Mandelbrot-Explorer/shader_interface.cpp
+	"shader_interface.h"
+	"utils.h"
+	<iostream>
+	<string>
+	<sstream>
+	<math.h>
+	<fstream>
+
+1270303916 /home/james/GLSL-Mandelbrot-Explorer/shader_interface.h
+	<GL/glfw.h>
+	<vector>
+	<string>
+
+1270301024 source:/home/james/GLSL-Mandelbrot-Explorer/utils.cpp
+	"utils.h"
+
+1270301042 /home/james/GLSL-Mandelbrot-Explorer/utils.h
+	<iostream>
+	<string>
+	<fstream>
+	<sstream>
+	<cstdlib>
+	<sys/time.h>
+	<pnglite.h>
+	<GL/glfw.h>
+
+1270303530 source:/home/james/GLSL-Mandelbrot-Explorer/parameter.cpp
+	"shader_interface.h"
+	<sstream>
+	<iostream>
+	<fstream>
 
