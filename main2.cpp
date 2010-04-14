@@ -82,7 +82,13 @@ int main(void)
                 si.rotate( -1.0 );
         }
 
-        // zooming using the arrow keys
+        // zooming using the up/down arrow keys
+        if(glfwGetKey(GLFW_KEY_UP) == GLFW_PRESS)
+            si.zoomIn(1.0);
+        else if(glfwGetKey(GLFW_KEY_DOWN) == GLFW_PRESS)
+            si.zoomIn(-1.0);
+
+        // changing iterations using left/right arrows
         if(glfwGetKey(GLFW_KEY_LEFT) == GLFW_PRESS)
             si.changeIterations(-1.0);
         else if(glfwGetKey(GLFW_KEY_RIGHT) == GLFW_PRESS)

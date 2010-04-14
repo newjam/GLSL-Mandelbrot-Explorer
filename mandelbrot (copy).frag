@@ -3,11 +3,14 @@
 //they are set before the rendering of each frame.
 
 //viewport uniforms
+
 uniform float deltax;
-uniform float deltay;
+//uniform float deltay;
+
 uniform float minx;
 uniform float miny;
 uniform float theta;
+
 
 uniform int iterations;
 
@@ -236,7 +239,8 @@ vec2 newtonfractal(vec2 z)
 
 void main(void)
 {
-    float real, imag, value;
+    float real, imag, value, deltay;
+    deltay = float(wH)/float(wW) * deltax;
     real = minx + (gl_FragCoord.x/float(wW))*deltax;
     imag = miny + (gl_FragCoord.y/float(wH))*deltay;
 
