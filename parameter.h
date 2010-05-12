@@ -9,6 +9,15 @@ using namespace std;
 
 // G++ forces you to put implementation of code in the same file as the header. Thanks a lot guys :(
 
+class Box
+{
+public:
+    float minx;
+    float miny;
+    float maxx;
+    float maxy;
+};
+
 template<class T> class Bounds
 {
 private:
@@ -21,7 +30,7 @@ public:
         minV = numeric_limits<T>::min() ;
         maxV = numeric_limits<T>::max() ;
         rollover = false;
-        cout << minV << " to " << maxV << endl;
+        //cout << minV << " to " << maxV << endl;
     }
     Bounds(T mi, T mx, bool r)
     {
@@ -33,7 +42,7 @@ public:
     {
         if ( val > maxV )
         {
-            cout << "overshot" << val << " > " << maxV << endl;
+            //cout << "overshot" << val << " > " << maxV << endl;
             if (rollover)
             {
                 return minV + (val - maxV);
@@ -44,7 +53,7 @@ public:
             }
         } else if (val < minV)
         {
-            cout << "undershot: " << val << " < " << minV << endl;
+            //cout << "undershot: " << val << " < " << minV << endl;
             if (rollover)
             {
                 return maxV + (val - minV);
@@ -86,6 +95,7 @@ class ParameterInterface
 {
 public:
     virtual void synch() = 0;
+    virtual void reset() = 0;
 };
 
 template<class T> class Parameter
@@ -94,6 +104,7 @@ template<class T> class Parameter
 private:
     GLint loc;
     T val;
+    T start;
     Bounds<T>* bound;
 protected:
     bool dirty;
@@ -109,6 +120,7 @@ public:
         loc = glGetUniformLocation(prog, name );
         dirty = true;
         val = initVal;
+        start = initVal;
 
         bound = new Bounds<T>();
     }
@@ -120,6 +132,7 @@ public:
         loc = glGetUniformLocation(prog, name );
         dirty = true;
         val = initVal;
+        start = initVal;
 
         //replace bounds with our user specified params.
         bound = new Bounds<T>(min, max, rollover);
@@ -133,6 +146,11 @@ public:
         /*loc = glGetUniformLocation(prog, name );
         dirty = true;
         val = initVal;*/
+    }
+    void reset()
+    {
+        dirty = true;
+        val = start;
     }
     void synch()
     {
@@ -151,7 +169,6 @@ public:
     }
     Parameter<T>& operator+=(T dv)
     {
-
         val     += dv;
         val     = bound->bind(val);
         dirty   = true;

@@ -17,7 +17,7 @@
 	<sys/time.h>
 	<pnglite.h>
 
-1270357724 source:/home/james/GLSL-Mandelbrot-Explorer/main2.cpp
+1273670320 source:/home/james/GLSL-Mandelbrot-Explorer/main2.cpp
 	"shader_interface.h"
 	"utils.h"
 	<iostream>
@@ -25,24 +25,27 @@
 	<fstream>
 	<cmath>
 
-1271230993 source:/home/james/GLSL-Mandelbrot-Explorer/shader_interface.cpp
+1273670012 source:/home/james/GLSL-Mandelbrot-Explorer/shader_interface.cpp
 	"shader_interface.h"
 	"utils.h"
 	<iostream>
+	<iomanip>
 	<string>
 	<sstream>
 	<math.h>
 	<fstream>
+	<exception>
 
-1271231713 /home/james/GLSL-Mandelbrot-Explorer/shader_interface.h
+1273669884 /home/james/GLSL-Mandelbrot-Explorer/shader_interface.h
 	"parameter.h"
+	<FTGL/ftgl.h>
 	<GL/glfw.h>
 	<vector>
 
-1270301024 source:/home/james/GLSL-Mandelbrot-Explorer/utils.cpp
+1273666638 source:/home/james/GLSL-Mandelbrot-Explorer/utils.cpp
 	"utils.h"
 
-1270301042 /home/james/GLSL-Mandelbrot-Explorer/utils.h
+1273667088 /home/james/GLSL-Mandelbrot-Explorer/utils.h
 	<iostream>
 	<string>
 	<fstream>
@@ -58,7 +61,7 @@
 	<iostream>
 	<fstream>
 
-1270356853 /home/james/GLSL-Mandelbrot-Explorer/parameter.h
+1273669267 /home/james/GLSL-Mandelbrot-Explorer/parameter.h
 	<sstream>
 	<iostream>
 	<fstream>

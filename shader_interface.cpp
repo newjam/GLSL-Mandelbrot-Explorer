@@ -2,20 +2,29 @@
 #include "utils.h"
 
 #include <iostream>
+#include <iomanip>
 #include <string>
 #include <sstream>
 #include <math.h>
 #include <fstream>
+#include <exception>
 
 #define PI 3.1415926
 
 using namespace std;
 
-ShaderInterface :: ShaderInterface( string fName )
+ShaderInterface :: ShaderInterface( string fName , Box bounds, int width, int height)
 {
+    font = new FTPixmapFont("/usr/share/fonts/truetype/freefont/FreeMono.ttf");
+    if( !font ){
+        cout << "failed to load font.";
+    }
+    font->FaceSize(45, 45);
+    render_text = false;
+
     char* source = getContents(fName);
 
-    cout << source;
+    //cout << source;
 
     GLhandleARB fragmentShader = createShader( source );
 
@@ -27,73 +36,60 @@ ShaderInterface :: ShaderInterface( string fName )
 
     glUseProgram( program );
 
+    // double check to see if the bounds should be abstracted as parameters and not hardcoded.
+
     time = Parameter<GLfloat>( program, "time", 0.0f );
     addParam( &time );
 
-    // set the dimension, must be after program is used.
-    //glUniform1i(wWLoc, window_width );
-    //glUniform1i(wHLoc, window_height );
-
-    wW = Parameter<GLint>(program, "wW", 100);
+    wW = Parameter<GLint>(program, "wW", width);
     addParam( &wW );
 
-    wH = Parameter<GLint>(program, "wH", 100);
+    wH = Parameter<GLint>(program, "wH", height);
     addParam( &wH );
 
     iterations = Parameter<GLint>(program, "iterations", 200, 2, 2000, false );
     addParam( &iterations );
 
-    deltax = Parameter<GLfloat>(program, "deltax", 3.0, .001, 3.0, false);
+    deltax = Parameter<GLfloat>(program, "deltax", 3.0, .00005, 10.0, false);
     addParam( &deltax);
-/*
-    deltay = Parameter<GLfloat>(program, "deltay", 2.0);
-    addParam( &deltay );
-*/
-    minx = Parameter<GLfloat>(program, "minx", -2.0 , -3.0, 2.0, false);
-    addParam( &minx );
 
-    miny = Parameter<GLfloat>(program, "miny", -1.0, -2.0, 2.0, false);
-    addParam( &miny );
+    centerx = Parameter<GLfloat>(program, "centerx", (bounds.minx + bounds.maxx)/2.0 , bounds.minx, bounds.maxx, false);
+    addParam( &centerx );
+
+    centery = Parameter<GLfloat>(program, "centery", (bounds.minx + bounds.maxx)/2.0 , bounds.minx, bounds.maxx, false);
+    addParam( &centery );
 
     theta = Parameter<GLfloat>(program, "theta", 1.0, -1.0, 1.0, true);
     addParam( &theta );
-
-    //width = Parameter<GLfloat>(program, "width", 5.0, 0.0, 5.0, true);
-    //addParam( &theta );
 }
+
+/*ShaderInterface :: ~ShaderInterface()
+{
+    for (unsigned int i=0; i<params.size(); i++)
+    {
+        delete params[i];
+    }
+    delete font;
+}*/
 
 void ShaderInterface :: zoomIn(GLfloat dz)
 {
     //normalize for time
-    dz = dz * dt;
+    dz = .01 * dz ;
 
-    //cout << "dz: " << dz << endl;
-     ;
-    GLfloat deltay = ( GLfloat(wH)/GLfloat(wW) ) * deltax;
-
-    //increase minx and miny by some small percentage of deltax and deltay
-    minx += deltax*dz;
-    miny += deltay*dz;
-
-    //cout << "(" << minx.toString() << ", " << miny.toString() << ")" << endl;
-
-    //decrease deltax and deltay by 2 times that small percentage.
-    //deltax -= 2.0*deltax*dz;
-    //deltay -= 2.0*deltay*dz;
-
-    deltax -= 2.0*deltax*dz;
+    deltax -= deltax*dz;
 }
 
 void ShaderInterface :: pan(GLfloat dx, GLfloat dy)
 {
     GLfloat deltay = ( GLfloat(wH)/GLfloat(wW) ) * deltax;
 
-    //normalize for time and current zoom
-    dx = dx * dt * deltax;
-    dy = dy * dt * deltay;
+    //normalize for /*time and*/ current zoom (these are absolute, so normalizing for time is N/A) still scale for sanity, though
+    dx = .01 * dx * deltax;
+    dy = .01 * dy * deltay;
 
-    minx -= dx*cos(PI * theta) - dy*sin(PI *  theta );
-    miny -= dx*sin(PI * theta) + dy*cos(PI *  theta );
+    centerx -= dx*cos(PI * theta) - dy*sin(PI *  theta );
+    centery -= dx*sin(PI * theta) + dy*cos(PI *  theta );
 }
 
 void ShaderInterface :: rotate(GLfloat dr)
@@ -128,38 +124,62 @@ void ShaderInterface :: synchParams()
     }
 }
 
-void ShaderInterface :: render()
+void ShaderInterface :: reset()
 {
-    // clear the buffer
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    //since all calculations are being done in the fragment shader, all we draw is a surface.
-    glUseProgram(program);
-    glRects(-1, -1, 1, 1);
+    for (unsigned int i=0; i<params.size(); i++)
+    {
+        params[i]->reset();
+    }
 }
 
+void ShaderInterface :: render()
+{
+
+    // clear the buffer
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    // we should alread be using this shader, but to be safe, set again.
+    glUseProgram(program);
+    //since all calculations are being done in the fragment shader, all we draw is a surface.
+    glRects(-1, -1, 1, 1);
+
+    if(render_text )
+    {
+        // default program (white?)
+        glUseProgram(0);
+
+        stringstream oss;
+
+        oss.precision(1);
+        oss.setf(ios::fixed,ios::floatfield);
+        oss << "fps="  << setw (5) << 1.0/dt << ",";
+        oss << "iter=" << iterations << ",";
+        oss.precision(2);
+        oss << "zoom=" << 3.0/deltax << "," ;
+        oss.precision(5);
+        oss << "pos=("<< centerx << "," << centery << ")";
+
+        font->Render( oss.str().c_str() );
+
+        glUseProgram(program);
+    }
+}
+
+void ShaderInterface :: toggleText()
+{
+    render_text = !render_text;
+}
+
+/*
+// removed so reset would work.
 void ShaderInterface :: setResolution( GLint x, GLint y )
 {
     wW = x;
     wH = y;
-}
+}*/
 
 void ShaderInterface :: changeIterations(float f)
 {
-
     iterations += (f < 0.0) ?  floor( f * dt ) : ceil( f * dt );
 }
 
-/*void test(){
-    ShaderInterface si = ShaderInterface("mandelbrot (copy).frag");
-    si.synchParams();
-
-    IntParameter bbb = IntParameter(0,0,2);
-    bbb += 4+IntParameter(0,0,3);
-    cout<< GLint(bbb);
-}*/
-
-/*int main(void)
-{
-    test();
-}*/
+// I just want to say, GOOD DESIGN FEELS SWELL

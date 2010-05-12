@@ -36,13 +36,10 @@
 		<Compiler>
 			<Add option="-Wall" />
 		</Compiler>
-		<Unit filename="main.c">
-			<Option compilerVar="CC" />
-		</Unit>
 		<Unit filename="main2.cpp" />
 		<Unit filename="mandelbrot (copy).frag" />
 		<Unit filename="mandelbrot.frag" />
-		<Unit filename="parameter.cpp" />
+		<Unit filename="parameter.h" />
 		<Unit filename="shader_interface.cpp" />
 		<Unit filename="shader_interface.h" />
 		<Unit filename="utils.cpp" />

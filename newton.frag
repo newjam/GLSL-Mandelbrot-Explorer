@@ -17,9 +17,9 @@ uniform float theta;
 
 uniform int iterations;
 
-uniform float power;
-
-
+//for constants in j-set
+uniform float realc = 0.0;
+uniform float imagc = 0.0;
 
 //to determine the current location
 uniform int wW;
@@ -28,9 +28,6 @@ uniform int wH;
 uniform float time;
 
 const float PI=3.1415926535;
-const float E =2.71828183;
-
-
 
 //for pretty colors
 vec4 hsv2rgb(vec3 col)
@@ -65,32 +62,7 @@ float cycle(float val)
     return abs(val - float(iPart));
 }
 
-/*float arg(vec2 a)
-{
-    if(a.x<0)
-    {
-        return PI;
-    }else
-    {
-        return 2.0 * atan(a.y /(pow((a.x*a.x + a.y*a.y), .5) + a.x) );
-    }
-}
-
 //complex number math functions
-vec2 cpow(vec2 a, float x)
-{
-  //a^z * e^(ib*z)
-
-  //float x = a.y*z;
-  //float u = pow(a.x, z);
-  //vec2( u*cos(x), u*sin(x) );
-
-  float u = pow(a.x*a.x + a.y*a.y, x/2.0);
-  float v = arg(a);
-  return vec2( u * cos( v * x ) , u * sin( v * x ) );
-}*/
-
-
 vec2 add(vec2 a, vec2 b)
 {
     return vec2(a.x + b.x, a.y + b.y);
@@ -111,73 +83,10 @@ vec2 sub(vec2 a, vec2 b)
     return vec2( a.x - b.x, a.y - b.y);
 }
 
-vec2 function(vec2 v1, vec2 v2)
-{
-    return add( mul( v1, v1 ), v2 );
-}
-
-vec2 function2(vec2 v1, vec2 v2)
-{
-    return add( mul( v1, mul( v1, v1 )), v2 );
-}
-
-vec2 function3(vec2 v1, vec2 v2)
-{
-    return add( sub(mul( v1, v1 ), v2), v1 );
-}
-
-vec2 function4(vec2 v1, vec2 v2)
-{
-    return add(mul( mul(v1 ,v1), v2), v2);
-}
-
-//various fractals???
-vec2 function5(vec2 v1, vec2 v2)
-{
-    vec2 tmp = add(v1, v2);
-    return add(mul(tmp,tmp), v2);
-}
-
-vec2 function6(vec2 v1, vec2 v2)
-{
-    return mul(function2(v1, v2), function3(v2, v1));
-}
-
-vec2 function7(vec2 v1, vec2 v2)
-{
-    return sub(sub(mul(v1, v1), v1), v2);
-}
-
-
-// first value of the vector holds 0 for not in set and 1 for in set
-// second value holds the smoothed "value"
-vec2 mandelbrot(vec2 coord, vec2 constant)
-{
-    int n = 0;
-
-    float value = 0.0;
-    float value2 = 0.0;
-
-    while(++n<iterations)
-    {
-        coord = function(coord, constant);
-        if( coord.x*coord.x + coord.y*coord.y > 4.0 )
-        {
-            //float(n)/float(iterations);
-            value = (float(n) + (0.32663426-log(log(sqrt(coord.x * coord.x + coord.y * coord.y))))/0.693147181)/float(iterations);
-            //value2 = (float(n) + (0.32663426-log(log(sqrt(coord.x * coord.x + coord.y * coord.y))))/0.693147181)/float(iterations);
-            return vec2(value, .90);
-        }
-    }
-    return vec2(0.0, 0.0);
-}
-
-
-vec2 f(vec2 x)
-{
-    return sub(mul(mul(mul(x, x), x), x) , vec2(1.0, 0.0));
-}
-
+/******************************
+** END "required" stuff *******
+** BEGIN custom fractal code **
+*******************************/
 
 //http://mathworld.wolfram.com/NewtonsMethod.html
 vec2 fp(vec2 x)
@@ -185,7 +94,6 @@ vec2 fp(vec2 x)
     vec2 tmp = mul( mul(x, x), x );
     return vec2(4.0*tmp.x, 4.0*tmp.y);
 }
-
 
 //should have roots on +/- 1.27201965 and +/- 0.786151378i
 //x^4-x^2-1
@@ -213,7 +121,6 @@ vec2 znext(vec2 z)
         return sub( z , div(f2(z), fp2(z) ));
 }
 
-
 vec2 newtonfractal(vec2 z)
 {
     int n = 0;
@@ -235,34 +142,10 @@ vec2 newtonfractal(vec2 z)
             break;
         }
     }
+    //(float(n) + (0.32663426-log(log(sqrt(z.x * z.x + z.y * z.y))))/0.693147181)/float(iterations)
+    //float(n)/float(iterations)
     return vec2(sink, float(n)/float(iterations));
 }
-
-/*
-vec2 newtonfractal(vec2 z)
-{
-    int n = 0;
-    float sink = 0.0;
-    while ( ++n < iterations )
-    {
-        z = znext(z);
-        if (z.x > .99999 && z.x < 1.00001 ) {
-            sink = .2;
-            break;
-        } else if (z.y > .99999 && z.y < 1.00001 ){
-            sink = .4;
-            break;
-        } else if (z.x < -.99999 && z.x > -1.00001 ) {
-            sink = .6;
-            break;
-        } else if (z.y < -.99999 && z.y > -1.00001 ){
-            sink = .8;
-            break;
-        }
-    }
-    return vec2(sink, float(n)/float(iterations));
-}
-*/
 
 void main(void)
 {
@@ -273,7 +156,10 @@ void main(void)
 
     float realR, imagR, thetaPi, cosThetaPi, sinThetaPi;
 
-    float offsetx, offsety;
+    float /*centerX, centerY,*/ offsetx, offsety;
+
+    //centerX = minx + deltax/2.0 ;
+    //centerY = miny + deltay/2.0 ;
 
     offsetx = centerx - real;
     offsety = centery - imag;
@@ -289,34 +175,17 @@ void main(void)
     vec2 coord, initcoord, results;
 
     coord = vec2(realR, imagR);
-    initcoord = coord;
+    //initcoord = coord;
 
     //vec2 juliaconstant = vec2(realc, imagc);
 
-    //results = mandelbrot(coord, juliaconstant);
-    results = mandelbrot(coord, coord);
-    //results = newtonfractal(coord);
+    results = newtonfractal(coord);
 
     //good for newton's method:
-    //float v = 1.0 - results.y;
-    //float h = results.x;
-    //float s = .88;
-
-    //results.y;//results.y * results.x*10.0;//1.0-results.y ;//3.0*(results.y*results.x);//.5 + .5*sin(results.y/10.0);//pow(results.x, .35);//cycle(results.x-time/15.0);//.5 + sin(results.y)/2.0;
-
-    //good for J-Set
-    //float v = results.y * results.x*10.0;
-    //float h = results.y;
-    //float s = .88;
-
-    //good for MB set
-    float v = results.y; //for lightness/brightness
-    //float v = results.x;
-    //results.y*results.x*10.0; // for darkness/highlights
-    //float h = 0.0;
-    float h = cycle(results.x+time/15.0);//.5 - .5*sin(results.x - time/30.0);
-    //results.x*10.0;//
+    float v = 1.0 - results.y;
+    float h = results.x;
     float s = .88;
+
 
     gl_FragColor = hsv2rgb(vec3(h, s, v));//vec4(1.0, g, b, 1.0);
 };

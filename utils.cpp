@@ -15,26 +15,6 @@ FrameSaver :: FrameSaver (int width, int height)
     windowH = height;
 }
 
-Cursor :: Cursor ()
-{
-    x = dx = y = dy = z = dz = 0;
-}
-void Cursor :: update()
-{
-    int nx, ny;
-    glfwGetMousePos(&nx, &ny);
-    dx = x - nx;
-    dy = y - ny;
-    x  = nx;
-    y  = ny;
-    int nz;
-    nz = glfwGetMouseWheel();
-    dz = z - nz;
-    z  = nz;
-}
-
-
-
 void FrameSaver :: saveFrameBuffer( )
 {
     unsigned char* pixBuffer = (unsigned char*)malloc(windowW*windowH*3);
@@ -54,6 +34,24 @@ void FrameSaver :: saveFrameBuffer( )
     printf("Saved frame buffer.\n");
     }
     free ( pixBuffer );
+}
+
+Cursor :: Cursor ()
+{
+    x = dx = y = dy = z = dz = 0;
+}
+void Cursor :: update()
+{
+    int nx, ny;
+    glfwGetMousePos(&nx, &ny);
+    dx = x - nx;
+    dy = y - ny;
+    x  = nx;
+    y  = ny;
+    int nz;
+    nz = glfwGetMouseWheel();
+    dz = z - nz;
+    z  = nz;
 }
 
 char* getContents(string fName)
@@ -97,6 +95,7 @@ void compileShader(GLhandleARB fragmentShader)
     if (compiled == GL_TRUE)
     {
         printf("success compiling shader\n");
+        //return true;
     }else
     {
         GLint blen = 0;
@@ -109,14 +108,16 @@ void compileShader(GLhandleARB fragmentShader)
         if(blen>1)
         {
             //GLchar* compiler_log = (GLchar*)malloc(blen);
+            //I think since this is a local variable I don't have to clean it up?
             GLchar compiler_log[blen];
             glGetInfoLogARB(fragmentShader, blen, &slen, compiler_log);
             printf("%s\n", compiler_log);
             //cout << compiler_log << "\n";
-            delete compiler_log;
+            //delete compiler_log;
         }
 
         printf("no success compiling shader\n");
+        //return false;
     }
 }
 
@@ -134,9 +135,11 @@ GLhandleARB linkShader(GLhandleARB fragmentShader)
     if (linked == GL_TRUE)
     {
         printf("success linking shader\n");
+        return program;
     }else
     {
         printf("no success linking shader\n");
+        return -1;
     }
-    return program;
+
 }

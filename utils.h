@@ -38,7 +38,6 @@ public:
     inline int getDz()      { return -dz;        }
 };
 
-
 char* getContents(string fName);
 
 // NOTE: any OGL, functions require a function context to already be present.
