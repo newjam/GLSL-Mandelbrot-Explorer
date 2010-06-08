@@ -11,6 +11,7 @@
 				<Option object_output="obj/Debug/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
+				<Option parameters="-s mandelbrot_boring.frag -i 666 -b -2.0 -2.0 2.0 2.0" />
 				<Compiler>
 					<Add option="-g" />
 					<Add option="-I/usr/include/freetype2" />
@@ -27,17 +28,19 @@
 				<Option compiler="gcc" />
 				<Compiler>
 					<Add option="-O2" />
+					<Add option="-I/usr/include/freetype2" />
+					<Add option="-DGL_GLEXT_PROTOTYPES" />
 				</Compiler>
 				<Linker>
 					<Add option="-s" />
+					<Add option="-lGL -lglfw -lXrandr -lpthread -lz -lpnglite -lftgl" />
 				</Linker>
 			</Target>
 		</Build>
 		<Compiler>
 			<Add option="-Wall" />
 		</Compiler>
-		<Unit filename="main2.cpp" />
-		<Unit filename="mandelbrot (copy).frag" />
+		<Unit filename="main.cpp" />
 		<Unit filename="mandelbrot.frag" />
 		<Unit filename="parameter.h" />
 		<Unit filename="shader_interface.cpp" />

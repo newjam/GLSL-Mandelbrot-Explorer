@@ -26,7 +26,12 @@ void GLFWCALL keyHandler( int key, int action )
     {
         switch (key)
         {
+            case 'I':
+                si->printInfo();
+                break;
             case 'P':
+                cout << "taking a picture at ";
+                si->printInfo();
                 fs->saveFrameBuffer();
                 break;
             case 'R':
@@ -39,29 +44,66 @@ void GLFWCALL keyHandler( int key, int action )
     }
 }
 
+void printInstructions()
+{
+    cout<<"James Newman's Realtime Fractal Explorer." << endl;
+
+}
+
 int main(int argc, const char* argv[])
 {
-    if (argc <= 1)
+    // parsing command line arguments to get parameters for program run.
+    // default values
+    Box bounds;
+    bounds.minx =  -2.0;
+    bounds.miny =  -1.5;
+    bounds.maxx =  1.0;
+    bounds.maxy =  1.5;
+    string shaderName = "";
+    int iterations = 500;
+
+    float sensitivity = 1.0;
+
+    int i = 0;
+    while(i<argc)
+    {
+        string arg = string(argv[i++]);
+        if( arg == string("-b") )
+        {
+            if(argc-i<4)
+            {
+                cout << "error: need 4 dimensions" << endl;
+                printInstructions();
+                return -1;
+            }
+            cout << "setting custom bounds" << endl;
+            bounds.minx = fromString<float>( string( argv[i++] ) );
+            bounds.miny = fromString<float>( string( argv[i++] ) );
+            bounds.maxx = fromString<float>( string( argv[i++] ) );
+            bounds.maxy = fromString<float>( string( argv[i++] ) );
+        }else if( arg == string("--help") )
+        {
+            printInstructions();
+        }else if( arg == string("-i") )
+        {
+            iterations = fromString<int>( string( argv[i++] ) );
+        }else if( arg == string("-s") )
+        {
+            shaderName = string( argv[i++] );
+        }else if( arg == string("-f") )
+        {
+            sensitivity = fromString<float>( string( argv[i++] ) );
+        }
+    }
+
+    if ( shaderName == "" )
     {
         cout << "Must specificy shader to use:" << endl << "\t" << argv[0] << " <shader.frag>" << endl;
         return -1;
     }
+    //
 
-    Box bounds;
-    if ( argc == 6 )
-    {
-        cout << "setting custom bounds" << endl;
-        bounds.minx = fromString<float>( string( argv[2] ) );
-        bounds.miny = fromString<float>( string( argv[3] ) );
-        bounds.maxx = fromString<float>( string( argv[4] ) );
-        bounds.maxy = fromString<float>( string( argv[5] ) );
-    }else
-    {
-        bounds.minx =  -2.0;
-        bounds.miny =  -1.5;
-        bounds.maxx =  1.0;
-        bounds.maxy =  1.5;
-    }
+
 
     glfwInit();
 
@@ -95,7 +137,7 @@ int main(int argc, const char* argv[])
 
     Cursor cursor = Cursor();
 
-    si = new ShaderInterface(argv[1], bounds, window_width, window_height);
+    si = new ShaderInterface( shaderName, bounds, iterations, window_width, window_height);
     //si->setResolution( window_width, window_height );
 
     glfwSetKeyCallback( keyHandler );
@@ -109,15 +151,15 @@ int main(int argc, const char* argv[])
         cursor.update();
 
         if( cursor.moved() )
-            si->pan(cursor.getDx() / 40.0 , cursor.getDy() / 40.0 );
+            si->pan(sensitivity*cursor.getDx() / 2000.0 , sensitivity*cursor.getDy() / 2000.0, false );
         if( cursor.scrolled() )
-            si->zoomIn( cursor.getDz() * 10.0 );
+            si->zoomIn( cursor.getDz()/25.0, false );
 
 
         if(joystickPresent)
         {
             float epsilon = .005 ;
-
+            float factor = .05;
             float pos[3];
             glfwGetJoystickPos(GLFW_JOYSTICK_1, pos, 3);
             float xJoyPos = pos[0];
@@ -125,9 +167,9 @@ int main(int argc, const char* argv[])
             float zJoyPos = -pos[2];
 
             if( abs(xJoyPos) + abs(yJoyPos) > epsilon*2.0 )
-                si->pan(xJoyPos, yJoyPos);
+                si->pan(sensitivity*xJoyPos*factor, sensitivity*yJoyPos*factor, true);
             if( abs(zJoyPos) > epsilon )
-                si->zoomIn(zJoyPos);
+                si->zoomIn(zJoyPos, true);
 
             unsigned char buttons[3];
             glfwGetJoystickButtons(GLFW_JOYSTICK_1, buttons, 3);
@@ -141,9 +183,9 @@ int main(int argc, const char* argv[])
 
         // zooming using the up/down arrow keys
         if(glfwGetKey(GLFW_KEY_UP) == GLFW_PRESS)
-            si->zoomIn(1.0);
+            si->zoomIn(1.0, true);
         else if(glfwGetKey(GLFW_KEY_DOWN) == GLFW_PRESS)
-            si->zoomIn(-1.0);
+            si->zoomIn(-1.0, true);
 
         // changing iterations using left/right arrows
         if(glfwGetKey(GLFW_KEY_LEFT) == GLFW_PRESS)
@@ -153,17 +195,19 @@ int main(int argc, const char* argv[])
 
         // panning with WASD on the keyboard
         if( glfwGetKey('W') == GLFW_PRESS )
-            si->pan( 0.0, 1.0 );
+            si->pan( 0.0, sensitivity*1.0, true );
         if( glfwGetKey('S') == GLFW_PRESS )
-            si->pan( 0.0, -1.0 );
+            si->pan( 0.0, sensitivity*(-1.0), true );
         if( glfwGetKey('A') == GLFW_PRESS )
-            si->pan( -1.0, 0.0 );
+            si->pan( sensitivity*(-1.0), 0.0, true );
         if( glfwGetKey('D') == GLFW_PRESS )
-            si->pan( 1.0, 0.0 );
+            si->pan( sensitivity*1.0, 0.0, true );
 
         // end of input, synch and render and swap.
         si->synchParams();
         si->render();
         glfwSwapBuffers();
     }
+    //delete si;
+    //delete fs;
 }

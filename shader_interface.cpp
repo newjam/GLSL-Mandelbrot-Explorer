@@ -13,7 +13,7 @@
 
 using namespace std;
 
-ShaderInterface :: ShaderInterface( string fName , Box bounds, int width, int height)
+ShaderInterface :: ShaderInterface( string fName , Box bounds, int start_iterations, int width, int height)
 {
     font = new FTPixmapFont("/usr/share/fonts/truetype/freefont/FreeMono.ttf");
     if( !font ){
@@ -47,7 +47,7 @@ ShaderInterface :: ShaderInterface( string fName , Box bounds, int width, int he
     wH = Parameter<GLint>(program, "wH", height);
     addParam( &wH );
 
-    iterations = Parameter<GLint>(program, "iterations", 200, 2, 2000, false );
+    iterations = Parameter<GLint>(program, "iterations", start_iterations, 2, 2000, false );
     addParam( &iterations );
 
     deltax = Parameter<GLfloat>(program, "deltax", 3.0, .00005, 10.0, false);
@@ -56,37 +56,52 @@ ShaderInterface :: ShaderInterface( string fName , Box bounds, int width, int he
     centerx = Parameter<GLfloat>(program, "centerx", (bounds.minx + bounds.maxx)/2.0 , bounds.minx, bounds.maxx, false);
     addParam( &centerx );
 
-    centery = Parameter<GLfloat>(program, "centery", (bounds.minx + bounds.maxx)/2.0 , bounds.minx, bounds.maxx, false);
+    centery = Parameter<GLfloat>(program, "centery", (bounds.miny + bounds.maxy)/2.0 , bounds.miny, bounds.maxy, false);
     addParam( &centery );
 
     theta = Parameter<GLfloat>(program, "theta", 1.0, -1.0, 1.0, true);
     addParam( &theta );
 }
 
-/*ShaderInterface :: ~ShaderInterface()
+ShaderInterface :: ~ShaderInterface()
 {
+    cout << "destroying shader interface" << endl;
     for (unsigned int i=0; i<params.size(); i++)
     {
         delete params[i];
     }
-    delete font;
-}*/
+    //delete font;
+    glDeleteProgram(program);
+}
 
-void ShaderInterface :: zoomIn(GLfloat dz)
+void ShaderInterface :: printInfo()
+{
+    cout << "location: (" << centerx << ", " << centery << ")\tzoom: " << deltax << endl;
+}
+
+void ShaderInterface :: zoomIn(GLfloat dz, bool relative)
 {
     //normalize for time
-    dz = .01 * dz ;
+    if(relative)
+    {
+        dz = dz * dt;
+    }
 
     deltax -= deltax*dz;
 }
 
-void ShaderInterface :: pan(GLfloat dx, GLfloat dy)
+void ShaderInterface :: pan(GLfloat dx, GLfloat dy, bool relative)
 {
     GLfloat deltay = ( GLfloat(wH)/GLfloat(wW) ) * deltax;
 
     //normalize for /*time and*/ current zoom (these are absolute, so normalizing for time is N/A) still scale for sanity, though
-    dx = .01 * dx * deltax;
-    dy = .01 * dy * deltay;
+    if(relative)
+    {
+        dx =  dx * dt;
+        dy =  dy * dt;
+    }
+    dx = dx * deltax;
+    dy = dy * deltay;
 
     centerx -= dx*cos(PI * theta) - dy*sin(PI *  theta );
     centery -= dx*sin(PI * theta) + dy*cos(PI *  theta );
@@ -134,7 +149,6 @@ void ShaderInterface :: reset()
 
 void ShaderInterface :: render()
 {
-
     // clear the buffer
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     // we should alread be using this shader, but to be safe, set again.
@@ -142,7 +156,7 @@ void ShaderInterface :: render()
     //since all calculations are being done in the fragment shader, all we draw is a surface.
     glRects(-1, -1, 1, 1);
 
-    if(render_text )
+    if(render_text)
     {
         // default program (white?)
         glUseProgram(0);

@@ -136,7 +136,7 @@ void main(void)
 
     //good for J-Set
     float v =  results.x*10.0;
-    float h =  cycle(time/15.0);//results.y;
+    float h =  .45;//results.y;
     float s = .88;
 
     /*float v = results.y * 2.0;

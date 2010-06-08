@@ -109,10 +109,10 @@ vec2 sub(vec2 a, vec2 b)
     return vec2( a.x - b.x, a.y - b.y);
 }
 
-//
+// add( mul( v1, v1 ), v2 );
 vec2 function(vec2 v1, vec2 v2)
 {
-    return add( mul( v1, v1 ), v2 );//add( mul( mul( v1, v1 ), v1) , div(v2, v1) );
+    return add( mul( mul( v1, v1 ), v1) , div(v2, v1) );
 }
 
 

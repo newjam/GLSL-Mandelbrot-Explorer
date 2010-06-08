@@ -166,103 +166,13 @@ vec2 mandelbrot(vec2 coord, vec2 constant)
             //float(n)/float(iterations);
             value = (float(n) + (0.32663426-log(log(sqrt(coord.x * coord.x + coord.y * coord.y))))/0.693147181)/float(iterations);
             //value2 = (float(n) + (0.32663426-log(log(sqrt(coord.x * coord.x + coord.y * coord.y))))/0.693147181)/float(iterations);
-            return vec2(value, .90);
+            return vec2(value, 1.0);
         }
     }
     return vec2(0.0, 0.0);
 }
 
 
-vec2 f(vec2 x)
-{
-    return sub(mul(mul(mul(x, x), x), x) , vec2(1.0, 0.0));
-}
-
-
-//http://mathworld.wolfram.com/NewtonsMethod.html
-vec2 fp(vec2 x)
-{
-    vec2 tmp = mul( mul(x, x), x );
-    return vec2(4.0*tmp.x, 4.0*tmp.y);
-}
-
-
-//should have roots on +/- 1.27201965 and +/- 0.786151378i
-//x^4-x^2-1
-vec2 f2(vec2 x)
-{
-    return sub(sub(mul(mul(mul(x, x), x), x), mul(x, x)) , vec2(1.0, 0.0));
-}
-
-//http://mathworld.wolfram.com/NewtonsMethod.html
-vec2 fp2(vec2 x)
-{
-    //x^3
-    vec2 tmp1 = mul( mul(x, x), x );
-    //2x
-    vec2 tmp2 = vec2(2.0*x.x, 2.0*x.y);
-    //4x^3
-    vec2 tmp3 = vec2(4.0*tmp1.x, 4.0*tmp1.y);
-    //4x^2-2x
-    vec2 tmp4 = sub(tmp3, tmp2);
-    return tmp4;
-}
-
-vec2 znext(vec2 z)
-{
-        return sub( z , div(f2(z), fp2(z) ));
-}
-
-
-vec2 newtonfractal(vec2 z)
-{
-    int n = 0;
-    float sink = 0.0;
-    while ( ++n < iterations )
-    {
-        z = znext(z);
-        if (z.x > 1.272018 && z.x < 1.272020 ) {
-            sink = .2;
-            break;
-        } else if (z.y > .7861512 && z.y < .7861514 ){
-            sink = .4;
-            break;
-        } else if (z.x < -1.272018 && z.x > -1.272020 ) {
-            sink = .6;
-            break;
-        } else if (z.y < -.7861512 && z.y > -.7861514 ){
-            sink = .8;
-            break;
-        }
-    }
-    return vec2(sink, float(n)/float(iterations));
-}
-
-/*
-vec2 newtonfractal(vec2 z)
-{
-    int n = 0;
-    float sink = 0.0;
-    while ( ++n < iterations )
-    {
-        z = znext(z);
-        if (z.x > .99999 && z.x < 1.00001 ) {
-            sink = .2;
-            break;
-        } else if (z.y > .99999 && z.y < 1.00001 ){
-            sink = .4;
-            break;
-        } else if (z.x < -.99999 && z.x > -1.00001 ) {
-            sink = .6;
-            break;
-        } else if (z.y < -.99999 && z.y > -1.00001 ){
-            sink = .8;
-            break;
-        }
-    }
-    return vec2(sink, float(n)/float(iterations));
-}
-*/
 
 void main(void)
 {
@@ -314,9 +224,9 @@ void main(void)
     //float v = results.x;
     //results.y*results.x*10.0; // for darkness/highlights
     //float h = 0.0;
-    float h = cycle(results.x+time/15.0);//.5 - .5*sin(results.x - time/30.0);
+    float h = .0;//cycle(results.x+time/15.0);//.5 - .5*sin(results.x - time/30.0);
     //results.x*10.0;//
-    float s = .88;
+    float s = .0;
 
     gl_FragColor = hsv2rgb(vec3(h, s, v));//vec4(1.0, g, b, 1.0);
 };
